@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Point of Sale | Prime Accessories</title>
+    
+    <!-- Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons: FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="tailwind.css"></script>
+    
+    <!-- Custom Config for Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        background: '#F3F4F6',
+                        surface: '#FFFFFF',
+                        cash: '#059669',
+                        bank: '#1E40AF',
+                        momo: '#F59E0B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .cart-drawer { transition: transform 0.3s ease-in-out; }
+        .cart-items::-webkit-scrollbar { width: 6px; }
+        .cart-items::-webkit-scrollbar-track { background: #f1f1f1; }
+        .cart-items::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
+        
+        .float-btn {
+            animation: pulse-green 2s infinite;
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+
+        .view-toggle-btn {
+            transition: all 0.2s ease;
+        }
+        .view-toggle-btn.active {
+            background-color: #4F46E5;
+            color: white;
+            border-color: #4F46E5;
+        }
+
+        .list-view-item {
+            transition: all 0.2s ease;
+        }
+        .list-view-item:hover {
+            background-color: #F9FAFB;
+        }
+
+        .grid-view-item {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .list-view-item {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-hidden {
+            display: none !important;
+        }
+
+        /* Product Filter Animation */
+        .product-hidden {
+            display: none !important;
+        }
+
+        .product-visible {
+            display: block !important;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Filter Badge */
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background-color: #EEF2FF;
+            color: #4F46E5;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .filter-badge button {
+            background: none;
+            border: none;
+            color: #4F46E5;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-badge button:hover {
+            color: #3730A3;
+        }
+
+        /* No Results */
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #6B7280;
+        }
+
+        .no-results i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #D1D5DB;
+        }
+
+        /* Product Image Styles */
+        .product-image {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 8px;
+            background-color: #F9FAFB;
+        }
+
+        .product-image-placeholder {
+            width: 100%;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #F9FAFB;
+            border-radius: 8px;
+            color: #9CA3AF;
+        }
+
+        .list-product-image {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 6px;
+            background-color: #F9FAFB;
+        }
+
+        .list-product-image-placeholder {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #F9FAFB;
+            border-radius: 6px;
+            color: #9CA3AF;
+        }
+
+        /* Image Loading */
+        .image-loading {
+            position: relative;
+        }
+
+        .image-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #E5E7EB;
+            border-top-color: #4F46E5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Thermal Receipt Styles */
+        #receipt-print {
+            display: none;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            width: 80mm;
+            padding: 5mm;
+            background: white;
+            color: black;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-header h2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .receipt-header p {
+            font-size: 10px;
+            margin: 2px 0;
+        }
+
+        .receipt-info {
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin: 3px 0;
+        }
+
+        .receipt-items {
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+
+        .receipt-item-name {
+            flex: 2;
+            text-align: left;
+        }
+
+        .receipt-item-qty {
+            flex: 1;
+            text-align: center;
+        }
+
+        .receipt-item-price {
+            flex: 1;
+            text-align: right;
+        }
+
+        .receipt-totals {
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .receipt-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+            font-size: 11px;
+        }
+
+        .receipt-total-row.grand-total {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 10px;
+        }
+
+        .receipt-barcode {
+            text-align: center;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+        }
+
+        .receipt-divider {
+            text-align: center;
+            margin: 5px 0;
+            font-size: 10px;
+        }
+
+        /* Print Media Query */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receipt-print, #receipt-print * {
+                visibility: visible;
+            }
+            #receipt-print {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                margin: 0;
+                padding: 5mm;
+            }
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+        }
+
+        .payment-option.selected {
+            border-color: #4F46E5;
+            background-color: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .payment-option.cash.selected {
+            border-color: #059669;
+            background-color: #D1FAE5;
+            color: #059669;
+        }
+
+        .payment-option.momo.selected {
+            border-color: #F59E0B;
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .payment-option.bank.selected {
+            border-color: #1E40AF;
+            background-color: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .payment-option.card.selected {
+            border-color: #6B7280;
+            background-color: #F3F4F6;
+            color: #374151;
+        }
+
+        /* Form Field Animations */
+        .payment-field {
+            transition: all 0.3s ease;
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .payment-field.hidden {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Mobile Money Provider Selection */
+        .momo-provider {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .momo-provider:hover {
+            transform: scale(1.05);
+        }
+        .momo-provider.selected {
+            border-color: #F59E0B;
+            background-color: #FEF3C7;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-gray-800 font-sans antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-50 w-64 bg-surface shadow-lg transform -translate-x-full md:relative md:translate-x-0 flex flex-col">
+            <!-- Logo -->
+            <div class="h-16 flex items-center justify-center border-b border-gray-100">
+                <div class="flex items-center gap-2 text-primary font-bold text-xl">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span>Prime Accessories</span>
+                </div>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-house w-5"></i> Dashboard
+                </a>
+                <a href="pos.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-cart-shopping w-5"></i> POS
+                </a>
+                <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-boxes-stacked w-5"></i> Inventory
+                </a>
+                <a href="sales.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-chart-line w-5"></i> Sales
+                </a>
+                <a href="reports.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-file-invoice w-5"></i> Reports
+                </a>
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-gear w-5"></i> System Settings
+                </a>
+            </nav>
+
+            <!-- User Profile -->
+            <div class="p-4 border-t border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-primary font-bold">
+                        JD
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">John Doe</p>
+                        <p class="text-xs text-gray-500">Cashier</p>
+                    </div>
+                    <button class="ml-auto text-gray-400 hover:text-danger">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            
+            <!-- Top Header -->
+            <header class="h-16 bg-surface shadow-sm flex items-center justify-between px-6 z-40">
+                <div class="flex items-center gap-4">
+                    <button id="menu-toggle" class="md:hidden text-gray-500 hover:text-primary focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">Point of Sale</h1>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- Search -->
+                    <div class="hidden md:flex relative">
+                        <input type="text" id="header-search" placeholder="Search products..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-64" oninput="filterProducts()">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    </div>
+                    
+                    <!-- Cart Icon (Header) -->
+                    <button onclick="toggleCart()" class="relative p-2 text-gray-400 hover:text-primary transition-colors">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-badge-header" class="absolute -top-1 -right-1 bg-danger text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-400 hover:text-primary transition-colors">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- POS Content (Products Only) -->
+            <main class="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+                
+                <!-- Filters & View Toggle -->
+                <div class="flex flex-col lg:flex-row gap-4 mb-6">
+                    <!-- Search (Mobile) -->
+                    <div class="relative flex-1 lg:hidden">
+                        <input type="text" id="mobile-search" placeholder="Search by name or SKU..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-surface" oninput="filterProducts()">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <select id="category-filter" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary bg-surface" onchange="filterProducts()">
+                        <option value="all">All Categories</option>
+                        <option value="smartphones">Smartphones</option>
+                        <option value="accessories">Accessories</option>
+                        <option value="tablets">Tablets</option>
+                    </select>
+                    
+                    <!-- Brand Filter -->
+                    <select id="brand-filter" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary bg-surface" onchange="filterProducts()">
+                        <option value="all">All Brands</option>
+                        <option value="apple">Apple</option>
+                        <option value="samsung">Samsung</option>
+                        <option value="xiaomi">Xiaomi</option>
+                        <option value="techno">Techno</option>
+                    </select>
+
+                    <!-- View Toggle Buttons -->
+                    <div class="flex items-center gap-2 bg-surface border border-gray-200 rounded-lg p-1">
+                        <button onclick="setView('grid')" id="grid-view-btn" class="view-toggle-btn active px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-grid-2"></i>
+                            <span class="hidden sm:inline">Grid</span>
+                        </button>
+                        <button onclick="setView('list')" id="list-view-btn" class="view-toggle-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 flex items-center gap-2">
+                            <i class="fa-solid fa-list"></i>
+                            <span class="hidden sm:inline">List</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                <div id="active-filters" class="mb-4 hidden">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm text-gray-500">Active Filters:</span>
+                        <div id="filter-badges" class="flex flex-wrap gap-2"></div>
+                        <button onclick="clearFilters()" class="text-sm text-primary hover:underline font-medium">Clear All</button>
+                    </div>
+                </div>
+
+                <!-- Product Count Display -->
+                <div class="mb-4 flex items-center justify-between">
+                    <p class="text-sm text-gray-600">
+                        Showing <span id="visible-count" class="font-bold text-primary">0</span> of <span id="total-count" class="font-bold">0</span> products
+                    </p>
+                </div>
+
+                <!-- No Results Message -->
+                <div id="no-results" class="no-results">
+                    <i class="fa-solid fa-box-open"></i>
+                    <h3 class="text-lg font-semibold mb-2">No Products Found</h3>
+                    <p class="text-sm">Try adjusting your filters or search term</p>
+                    <button onclick="clearFilters()" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Clear Filters</button>
+                </div>
+
+                <!-- GRID VIEW -->
+                <div id="grid-view" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Product Card 1 - Smartphones, Apple -->
+                    <div class="grid-view-item product-card" data-category="smartphones" data-brand="apple" data-name="iphone 15 pro" data-sku="sku-001">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1696446701796-da61225697cc?w=400&h=300&fit=crop" 
+                                     alt="iPhone 15 Pro" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-mobile-screen text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">iPhone 15 Pro</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">256GB - Natural Titanium</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 12,500</span>
+                                <button onclick="addToCart('iPhone 15 Pro', 12500)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 2 - Smartphones, Samsung -->
+                    <div class="grid-view-item product-card" data-category="smartphones" data-brand="samsung" data-name="samsung s24" data-sku="sku-002">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&h=300&fit=crop" 
+                                     alt="Samsung S24" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-mobile-screen text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded">Low Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">Samsung S24</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">512GB - Phantom Black</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 10,200</span>
+                                <button onclick="addToCart('Samsung S24', 10200)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 3 - Accessories, Apple -->
+                    <div class="grid-view-item product-card" data-category="accessories" data-brand="apple" data-name="airpods pro 2" data-sku="sku-003">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1603351154351-5cf99bc75468?w=400&h=300&fit=crop" 
+                                     alt="AirPods Pro 2" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-headphones text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">Out of Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">AirPods Pro 2</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">With MagSafe Case</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 2,800</span>
+                                <button disabled class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center cursor-not-allowed">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 4 - Tablets, Apple -->
+                    <div class="grid-view-item product-card" data-category="tablets" data-brand="apple" data-name="ipad air 5" data-sku="sku-004">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=300&fit=crop" 
+                                     alt="iPad Air 5" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-tablet-screen-button text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">iPad Air 5</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">64GB - Space Gray</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 6,500</span>
+                                <button onclick="addToCart('iPad Air 5', 6500)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 5 - Smartphones, Xiaomi -->
+                    <div class="grid-view-item product-card" data-category="smartphones" data-brand="xiaomi" data-name="xiaomi redmi 13" data-sku="sku-005">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&h=300&fit=crop" 
+                                     alt="Xiaomi Redmi 13" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-mobile-screen text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">Xiaomi Redmi 13</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">128GB - Midnight Black</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 3,200</span>
+                                <button onclick="addToCart('Xiaomi Redmi 13', 3200)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Card 6 - Accessories, Apple -->
+                    <div class="grid-view-item product-card" data-category="accessories" data-brand="apple" data-name="20w charger" data-sku="sku-006">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&h=300&fit=crop" 
+                                     alt="20W Charger" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-plug text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">20W Charger</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">USB-C Power Adapter</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 250</span>
+                                <button onclick="addToCart('20W Charger', 250)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 7 - Smartphones, Techno -->
+                    <div class="grid-view-item product-card" data-category="smartphones" data-brand="techno" data-name="techno spark 10" data-sku="sku-007">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=300&fit=crop" 
+                                     alt="Techno Spark 10" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-mobile-screen text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">Techno Spark 10</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">128GB - Starry Black</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 1,800</span>
+                                <button onclick="addToCart('Techno Spark 10', 1800)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Card 8 - Accessories, Samsung -->
+                    <div class="grid-view-item product-card" data-category="accessories" data-brand="samsung" data-name="galaxy buds 2" data-sku="sku-008">
+                        <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow group">
+                            <!-- Product Image -->
+                            <div class="mb-3">
+                                <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=300&fit=crop" 
+                                     alt="Galaxy Buds 2" 
+                                     class="product-image"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="product-image-placeholder" style="display: none;">
+                                    <i class="fa-solid fa-headphones text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 mb-1 text-sm">Galaxy Buds 2</h3>
+                            <p class="text-xs text-gray-500 mb-3 truncate">Wireless Earbuds</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-bold text-primary">GH₵ 1,500</span>
+                                <button onclick="addToCart('Galaxy Buds 2', 1500)" class="w-8 h-8 rounded-full bg-indigo-50 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIST VIEW -->
+                <div id="list-view" class="view-hidden bg-surface rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">SKU</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Category</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Brand</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <!-- Product Row 1 - Smartphones, Apple -->
+                            <tr class="list-view-item product-row" data-category="smartphones" data-brand="apple" data-name="iphone 15 pro" data-sku="sku-001">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1696446701796-da61225697cc?w=100&h=100&fit=crop" 
+                                             alt="iPhone 15 Pro" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-mobile-screen text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">iPhone 15 Pro</p>
+                                            <p class="text-xs text-gray-500">256GB - Natural Titanium</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-001</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium">Smartphones</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Apple</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 12,500</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('iPhone 15 Pro', 12500)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 2 - Smartphones, Samsung -->
+                            <tr class="list-view-item product-row" data-category="smartphones" data-brand="samsung" data-name="samsung s24" data-sku="sku-002">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=100&h=100&fit=crop" 
+                                             alt="Samsung S24" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-mobile-screen text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">Samsung S24</p>
+                                            <p class="text-xs text-gray-500">512GB - Phantom Black</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-002</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium">Smartphones</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Samsung</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 10,200</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded">Low Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('Samsung S24', 10200)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 3 - Accessories, Apple -->
+                            <tr class="list-view-item product-row" data-category="accessories" data-brand="apple" data-name="airpods pro 2" data-sku="sku-003">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1603351154351-5cf99bc75468?w=100&h=100&fit=crop" 
+                                             alt="AirPods Pro 2" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-headphones text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">AirPods Pro 2</p>
+                                            <p class="text-xs text-gray-500">With MagSafe Case</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-003</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-purple-50 text-purple-600 rounded text-xs font-medium">Accessories</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Apple</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 2,800</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">Out of Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button disabled class="px-3 py-1.5 bg-gray-100 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 4 - Tablets, Apple -->
+                            <tr class="list-view-item product-row" data-category="tablets" data-brand="apple" data-name="ipad air 5" data-sku="sku-004">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=100&h=100&fit=crop" 
+                                             alt="iPad Air 5" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-tablet-screen-button text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">iPad Air 5</p>
+                                            <p class="text-xs text-gray-500">64GB - Space Gray</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-004</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium">Tablets</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Apple</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 6,500</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('iPad Air 5', 6500)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 5 - Smartphones, Xiaomi -->
+                            <tr class="list-view-item product-row" data-category="smartphones" data-brand="xiaomi" data-name="xiaomi redmi 13" data-sku="sku-005">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=100&h=100&fit=crop" 
+                                             alt="Xiaomi Redmi 13" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-mobile-screen text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">Xiaomi Redmi 13</p>
+                                            <p class="text-xs text-gray-500">128GB - Midnight Black</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-005</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium">Smartphones</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Xiaomi</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 3,200</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('Xiaomi Redmi 13', 3200)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 6 - Accessories, Apple -->
+                            <tr class="list-view-item product-row" data-category="accessories" data-brand="apple" data-name="20w charger" data-sku="sku-006">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=100&h=100&fit=crop" 
+                                             alt="20W Charger" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-plug text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">20W Charger</p>
+                                            <p class="text-xs text-gray-500">USB-C Power Adapter</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-006</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-purple-50 text-purple-600 rounded text-xs font-medium">Accessories</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Apple</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 250</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('20W Charger', 250)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 7 - Smartphones, Techno -->
+                            <tr class="list-view-item product-row" data-category="smartphones" data-brand="techno" data-name="techno spark 10" data-sku="sku-007">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&h=100&fit=crop" 
+                                             alt="Techno Spark 10" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-mobile-screen text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">Techno Spark 10</p>
+                                            <p class="text-xs text-gray-500">128GB - Starry Black</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-007</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium">Smartphones</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Techno</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 1,800</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('Techno Spark 10', 1800)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Product Row 8 - Accessories, Samsung -->
+                            <tr class="list-view-item product-row" data-category="accessories" data-brand="samsung" data-name="galaxy buds 2" data-sku="sku-008">
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=100&h=100&fit=crop" 
+                                             alt="Galaxy Buds 2" 
+                                             class="list-product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="list-product-image-placeholder" style="display: none;">
+                                            <i class="fa-solid fa-headphones text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">Galaxy Buds 2</p>
+                                            <p class="text-xs text-gray-500">Wireless Earbuds</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 font-mono hidden md:table-cell">SKU-008</td>
+                                <td class="px-4 py-3 hidden lg:table-cell">
+                                    <span class="px-2 py-1 bg-purple-50 text-purple-600 rounded text-xs font-medium">Accessories</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">Samsung</td>
+                                <td class="px-4 py-3">
+                                    <span class="font-bold text-primary">GH₵ 1,500</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">In Stock</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="addToCart('Galaxy Buds 2', 1500)" class="px-3 py-1.5 bg-indigo-50 text-primary rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Spacer for Floating Button -->
+                <div class="h-24"></div>
+            </main>
+
+            <!-- Floating Cart Button (Bottom Right) -->
+            <button onclick="toggleCart()" class="float-btn fixed bottom-6 right-6 bg-primary hover:bg-indigo-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform hover:scale-110">
+                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                <span id="cart-badge-float" class="absolute -top-1 -right-1 bg-danger text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full hidden">0</span>
+            </button>
+
+            <!-- Cart Slide-Over Drawer -->
+            <div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden transition-opacity"></div>
+            <div id="cart-drawer" class="cart-drawer fixed inset-y-0 right-0 z-50 w-full md:w-96 bg-surface shadow-2xl transform translate-x-full flex flex-col">
+                <!-- Cart Header -->
+                <div class="p-5 border-b border-gray-100 flex items-center justify-between bg-primary text-white">
+                    <h2 class="text-lg font-bold"><i class="fa-solid fa-cart-shopping mr-2"></i>Current Order</h2>
+                    <button onclick="toggleCart()" class="text-white hover:text-gray-200">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cart Items (Scrollable) -->
+                <div id="cart-items" class="cart-items flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                    <!-- Empty State -->
+                    <div id="empty-cart" class="h-full flex flex-col items-center justify-center text-center text-gray-400">
+                        <i class="fa-solid fa-cart-arrow-down text-4xl mb-3 text-gray-300"></i>
+                        <p class="text-sm">Cart is empty</p>
+                        <p class="text-xs">Select products to add</p>
+                    </div>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="p-5 border-t border-gray-100 bg-surface shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Subtotal</span>
+                            <span id="subtotal">GH₵ 0.00</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Tax (5%)</span>
+                            <span id="tax">GH₵ 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-gray-600">
+                            <span>Discount</span>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="discount-input" placeholder="0" class="w-16 px-2 py-1 border border-gray-300 rounded text-right text-xs focus:outline-none focus:border-primary" oninput="calculateTotal()">
+                                <span class="text-xs">GH₵</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-200 pt-2 flex justify-between items-center">
+                            <span class="text-base font-bold text-gray-800">Grand Total</span>
+                            <span id="grand-total" class="text-xl font-bold text-primary">GH₵ 0.00</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="openPaymentModal()" class="w-full bg-primary hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-credit-card"></i> Process Payment
+                    </button>
+                    <button onclick="clearCart()" class="w-full mt-2 text-danger text-sm font-medium hover:underline">Clear Cart</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="modal fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closePaymentModal()"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-surface rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto m-4">
+                <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-surface rounded-t-2xl">
+                    <h3 class="text-xl font-bold text-gray-800">Process Payment</h3>
+                    <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Total Display -->
+                    <div class="bg-indigo-50 rounded-xl p-4 mb-6 text-center">
+                        <p class="text-sm text-gray-600 mb-1">Amount to Pay</p>
+                        <h2 class="text-3xl font-bold text-primary" id="modal-total">GH₵ 0.00</h2>
+                    </div>
+
+                    <!-- Payment Methods -->
+                    <p class="text-sm font-semibold text-gray-700 mb-3">Select Payment Method</p>
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <!-- Cash Payment Option -->
+                        <div onclick="selectPayment(this, 'cash')" class="payment-option cash cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-cash flex items-center justify-center">
+                                <i class="fa-solid fa-money-bill-wave text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium">Cash</span>
+                        </div>
+                        
+                        <!-- Mobile Money Option (Combined) -->
+                        <div onclick="selectPayment(this, 'momo')" class="payment-option momo cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 text-momo flex items-center justify-center">
+                                <i class="fa-solid fa-mobile-screen-button text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium">Mobile Money</span>
+                        </div>
+                        
+                        <!-- Bank Transfer -->
+                        <div onclick="selectPayment(this, 'bank')" class="payment-option bank cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 text-bank flex items-center justify-center">
+                                <i class="fa-solid fa-building-columns text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium">Bank Transfer</span>
+                        </div>
+                        
+                        <!-- Card Payment -->
+                        <div onclick="selectPayment(this, 'card')" class="payment-option card cursor-pointer border-2 border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+                            <div class="w-12 h-12 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
+                                <i class="fa-regular fa-credit-card text-xl"></i>
+                            </div>
+                            <span class="text-sm font-medium">Card</span>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Money Provider Selection -->
+                    <div id="momo-provider-container" class="payment-field hidden mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fa-solid fa-sim-card mr-1 text-momo"></i>
+                            Select Mobile Money Provider 
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div onclick="selectMomoProvider(this, 'mtn')" class="momo-provider border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center gap-1 hover:bg-gray-50 transition-colors">
+                                <div class="w-10 h-10 rounded-full bg-[#FFCC00] text-black flex items-center justify-center font-bold text-xs">MTN</div>
+                                <span class="text-xs font-medium">MoMo</span>
+                            </div>
+                            <div onclick="selectMomoProvider(this, 'vodafone')" class="momo-provider border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center gap-1 hover:bg-gray-50 transition-colors">
+                                <div class="w-10 h-10 rounded-full bg-[#E60000] text-white flex items-center justify-center font-bold text-xs">VDF</div>
+                                <span class="text-xs font-medium">Cash</span>
+                            </div>
+                            <div onclick="selectMomoProvider(this, 'airtel')" class="momo-provider border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center gap-1 hover:bg-gray-50 transition-colors">
+                                <div class="w-10 h-10 rounded-full bg-[#003399] text-white flex items-center justify-center font-bold text-xs">AT</div>
+                                <span class="text-xs font-medium">Money</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-info-circle mr-1"></i>Choose the customer's mobile money network</p>
+                    </div>
+
+                    <!-- Phone Field -->
+                    <div id="phone-field-container" class="payment-field hidden space-y-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-phone mr-1 text-primary"></i>
+                                Customer Phone Number 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel" id="customer-phone" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="024 XXX XXXX">
+                            <p class="text-xs text-gray-500 mt-1">Required for Mobile Money payments</p>
+                        </div>
+                    </div>
+
+                    <!-- Bank Details Field -->
+                    <div id="bank-field-container" class="payment-field hidden space-y-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-building-columns mr-1 text-bank"></i>
+                                Select Bank 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select id="bank-select" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-bank bg-surface">
+                                <option value="">-- Choose Bank --</option>
+                                <option value="gba">Ghana Commercial Bank (GCB)</option>
+                                <option value="ecobank">Ecobank Ghana</option>
+                                <option value="stanbic">Stanbic Bank</option>
+                                <option value="barclays">Absa Bank (Barclays)</option>
+                                <option value="fidelity">Fidelity Bank</option>
+                                <option value="zenith">Zenith Bank</option>
+                                <option value="access">Access Bank</option>
+                                <option value="cal">CalBank</option>
+                                <option value="umb">Universal Merchant Bank (UMB)</option>
+                                <option value="other">Other Bank</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-id-card mr-1 text-bank"></i>
+                                Account Number 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="bank-account-number" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-bank" placeholder="Enter account number" maxlength="20">
+                            <p class="text-xs text-gray-500 mt-1">Customer's bank account number for verification</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-user mr-1 text-bank"></i>
+                                Account Holder Name 
+                                <span class="text-gray-400">(Optional)</span>
+                            </label>
+                            <input type="text" id="account-holder-name" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-bank" placeholder="Account holder name">
+                        </div>
+                    </div>
+
+                    <!-- Cash Field -->
+                    <div id="cash-field-container" class="payment-field hidden space-y-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-hand-holding-dollar mr-1 text-cash"></i>
+                                Amount Received 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" id="cash-received" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cash" placeholder="Enter amount received" oninput="calculateChange()">
+                        </div>
+                        <div id="change-display" class="hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-emerald-700 font-medium">Change to Return:</span>
+                                <span id="change-amount" class="text-lg font-bold text-emerald-600">GH₵ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reference Field -->
+                    <div id="reference-field-container" class="payment-field space-y-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fa-solid fa-hashtag mr-1 text-primary"></i>
+                                Reference Number 
+                                <span class="text-gray-400">(Optional)</span>
+                            </label>
+                            <input type="text" id="reference-number" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Transaction ID, Cheque No., or Cash Received">
+                        </div>
+                    </div>
+
+                    <!-- Print Receipt Option -->
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="print-receipt" checked class="w-4 h-4 text-primary rounded focus:ring-primary">
+                            <span class="text-sm text-gray-700">Print Receipt (Thermal Printer)</span>
+                        </label>
+                    </div>
+
+                    <!-- Payment Info Notice -->
+                    <div id="payment-notice" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <p class="text-xs text-blue-700">
+                            <i class="fa-solid fa-info-circle mr-1"></i>
+                            <span id="payment-notice-text">Phone number is required for this payment method</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-6 border-t border-gray-100 flex items-center justify-end gap-3 sticky bottom-0 bg-surface rounded-b-2xl">
+                    <button onclick="closePaymentModal()" class="px-6 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+                    <button onclick="processPayment()" class="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
+                        <i class="fa-solid fa-print mr-2"></i>Confirm & Print
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Preview Modal -->
+        <div id="receiptPreviewModal" class="modal fixed inset-0 z-[70] hidden">
+            <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-surface rounded-2xl shadow-2xl w-full max-w-md m-4">
+                <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-receipt mr-2 text-primary"></i>Receipt Preview</h3>
+                    <button onclick="closeReceiptPreview()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-5 bg-gray-100">
+                    <div id="receipt-preview-content" class="bg-white p-4 mx-auto" style="width: 80mm; font-family: 'Courier New', monospace; font-size: 11px;">
+                        <!-- Receipt content will be generated here -->
+                    </div>
+                </div>
+                <div class="p-5 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <button onclick="closeReceiptPreview()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50">Close</button>
+                    <button onclick="printReceipt()" class="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-indigo-700">
+                        <i class="fa-solid fa-print mr-2"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Receipt for Printing -->
+        <div id="receipt-print">
+            <div class="receipt-header">
+                <h2>PRIME ACCESSORIES</h2>
+                <p>123 High Street, Accra, Ghana</p>
+                <p>Tel: +233 24 123 4567</p>
+                <p>Email: info@primeaccessories.com</p>
+            </div>
+            <div class="receipt-info">
+                <div class="receipt-info-row">
+                    <span>Receipt #:</span>
+                    <span id="receipt-number">RCP-000</span>
+                </div>
+                <div class="receipt-info-row">
+                    <span>Date:</span>
+                    <span id="receipt-date">01/01/2026</span>
+                </div>
+                <div class="receipt-info-row">
+                    <span>Time:</span>
+                    <span id="receipt-time">12:00:00</span>
+                </div>
+                <div class="receipt-info-row">
+                    <span>Cashier:</span>
+                    <span id="receipt-cashier">John Doe</span>
+                </div>
+                <div class="receipt-info-row">
+                    <span>Payment:</span>
+                    <span id="receipt-payment">Cash</span>
+                </div>
+                <div class="receipt-info-row" id="receipt-momo-provider-row" style="display: none;">
+                    <span>Mobile Money:</span>
+                    <span id="receipt-momo-provider">MTN MoMo</span>
+                </div>
+                <div class="receipt-info-row" id="receipt-bank-row" style="display: none;">
+                    <span>Bank:</span>
+                    <span id="receipt-bank">GCB Bank</span>
+                </div>
+                <div class="receipt-info-row" id="receipt-account-row" style="display: none;">
+                    <span>Account #:</span>
+                    <span id="receipt-account">1234567890</span>
+                </div>
+                <div class="receipt-info-row" id="receipt-phone-row" style="display: none;">
+                    <span>Phone:</span>
+                    <span id="receipt-phone">024 XXX XXXX</span>
+                </div>
+                <div class="receipt-info-row" id="receipt-change-row" style="display: none;">
+                    <span>Change:</span>
+                    <span id="receipt-change">GH₵ 0.00</span>
+                </div>
+            </div>
+            <div class="receipt-items">
+                <div style="border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 10px;">
+                        <span style="flex: 2;">Item</span>
+                        <span style="flex: 1; text-align: center;">Qty</span>
+                        <span style="flex: 1; text-align: right;">Price</span>
+                        <span style="flex: 1; text-align: right;">Total</span>
+                    </div>
+                </div>
+                <div id="receipt-items-container">
+                    <!-- Items will be inserted here -->
+                </div>
+            </div>
+            <div class="receipt-totals">
+                <div class="receipt-total-row">
+                    <span>Subtotal:</span>
+                    <span id="receipt-subtotal">GH₵ 0.00</span>
+                </div>
+                <div class="receipt-total-row">
+                    <span>Tax (5%):</span>
+                    <span id="receipt-tax">GH₵ 0.00</span>
+                </div>
+                <div class="receipt-total-row" id="receipt-discount-row" style="display: none;">
+                    <span>Discount:</span>
+                    <span id="receipt-discount">-GH₵ 0.00</span>
+                </div>
+                <div class="receipt-total-row grand-total">
+                    <span>TOTAL:</span>
+                    <span id="receipt-grand-total">GH₵ 0.00</span>
+                </div>
+            </div>
+            <div class="receipt-barcode">
+                <div style="font-size: 18px; letter-spacing: 3px; margin: 10px 0;" id="receipt-barcode-number">RCP000000</div>
+                <div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 5px 0;">|||||| ||| || ||||||| ||||</div>
+            </div>
+            <div class="receipt-footer">
+                <p>Thank you for your purchase!</p>
+                <p>Items can be returned within 7 days</p>
+                <p>with original receipt</p>
+                <div class="receipt-divider">*** *** *** *** *** ***</div>
+                <p>www.primeaccessories.com</p>
+            </div>
+        </div>
+
+        <!-- Success Toast -->
+        <div id="success-toast" class="fixed bottom-5 right-5 bg-secondary text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-[70]">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Payment Successful! Receipt Printed</span>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- Sidebar Logic ---
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // --- View Toggle Logic ---
+        let currentView = 'grid';
+
+        function setView(view) {
+            currentView = view;
+            const gridView = document.getElementById('grid-view');
+            const listView = document.getElementById('list-view');
+            const gridBtn = document.getElementById('grid-view-btn');
+            const listBtn = document.getElementById('list-view-btn');
+
+            if (view === 'grid') {
+                gridView.classList.remove('view-hidden');
+                listView.classList.add('view-hidden');
+                gridBtn.classList.add('active');
+                gridBtn.classList.remove('text-gray-600');
+                listBtn.classList.remove('active');
+                listBtn.classList.add('text-gray-600');
+                localStorage.setItem('posView', 'grid');
+            } else {
+                gridView.classList.add('view-hidden');
+                listView.classList.remove('view-hidden');
+                listBtn.classList.add('active');
+                listBtn.classList.remove('text-gray-600');
+                gridBtn.classList.remove('active');
+                gridBtn.classList.add('text-gray-600');
+                localStorage.setItem('posView', 'list');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('posView') || 'grid';
+            setView(savedView);
+            updateProductCount();
+        });
+
+        // --- Product Filtering Logic ---
+        function filterProducts() {
+            const categoryFilter = document.getElementById('category-filter').value;
+            const brandFilter = document.getElementById('brand-filter').value;
+            const searchInput = document.getElementById('header-search').value.toLowerCase() || 
+                               document.getElementById('mobile-search').value.toLowerCase();
+            
+            const gridCards = document.querySelectorAll('#grid-view .product-card');
+            const listRows = document.querySelectorAll('#list-view .product-row');
+            const allProducts = [...gridCards, ...listRows];
+            
+            let visibleCount = 0;
+            const categoryLabels = {
+                'smartphones': 'Smartphones',
+                'accessories': 'Accessories',
+                'tablets': 'Tablets'
+            };
+            const brandLabels = {
+                'apple': 'Apple',
+                'samsung': 'Samsung',
+                'xiaomi': 'Xiaomi',
+                'techno': 'Techno'
+            };
+
+            // Update filter badges
+            updateFilterBadges(categoryFilter, brandFilter, categoryLabels, brandLabels);
+
+            allProducts.forEach(product => {
+                const productCategory = product.getAttribute('data-category');
+                const productBrand = product.getAttribute('data-brand');
+                const productName = product.getAttribute('data-name') || product.textContent.toLowerCase();
+                const productSku = product.getAttribute('data-sku') || '';
+                
+                let matchesCategory = categoryFilter === 'all' || productCategory === categoryFilter;
+                let matchesBrand = brandFilter === 'all' || productBrand === brandFilter;
+                let matchesSearch = searchInput === '' || productName.includes(searchInput) || productSku.includes(searchInput);
+                
+                if (matchesCategory && matchesBrand && matchesSearch) {
+                    product.classList.remove('product-hidden');
+                    product.classList.add('product-visible');
+                    visibleCount++;
+                } else {
+                    product.classList.remove('product-visible');
+                    product.classList.add('product-hidden');
+                }
+            });
+
+            // Show/hide no results message
+            const noResults = document.getElementById('no-results');
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+                document.getElementById('grid-view').style.display = currentView === 'grid' ? 'none' : 'grid';
+                document.getElementById('list-view').style.display = currentView === 'list' ? 'none' : 'table';
+            } else {
+                noResults.style.display = 'none';
+                document.getElementById('grid-view').style.display = currentView === 'grid' ? 'grid' : 'none';
+                document.getElementById('list-view').style.display = currentView === 'list' ? 'table' : 'none';
+            }
+
+            updateProductCount(visibleCount, allProducts.length);
+        }
+
+        function updateFilterBadges(category, brand, categoryLabels, brandLabels) {
+            const activeFilters = document.getElementById('active-filters');
+            const filterBadges = document.getElementById('filter-badges');
+            
+            if (category !== 'all' || brand !== 'all') {
+                activeFilters.classList.remove('hidden');
+                filterBadges.innerHTML = '';
+                
+                if (category !== 'all') {
+                    filterBadges.innerHTML += `
+                        <div class="filter-badge">
+                            <i class="fa-solid fa-tag"></i>
+                            ${categoryLabels[category]}
+                            <button onclick="clearCategoryFilter()">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                if (brand !== 'all') {
+                    filterBadges.innerHTML += `
+                        <div class="filter-badge">
+                            <i class="fa-solid fa-building"></i>
+                            ${brandLabels[brand]}
+                            <button onclick="clearBrandFilter()">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                activeFilters.classList.add('hidden');
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('category-filter').value = 'all';
+            document.getElementById('brand-filter').value = 'all';
+            document.getElementById('header-search').value = '';
+            document.getElementById('mobile-search').value = '';
+            filterProducts();
+        }
+
+        function clearCategoryFilter() {
+            document.getElementById('category-filter').value = 'all';
+            filterProducts();
+        }
+
+        function clearBrandFilter() {
+            document.getElementById('brand-filter').value = 'all';
+            filterProducts();
+        }
+
+        function updateProductCount(visible, total) {
+            document.getElementById('visible-count').textContent = visible;
+            document.getElementById('total-count').textContent = total;
+        }
+
+        // --- Cart Logic ---
+        let cart = [];
+        let grandTotal = 0;
+        let isCartOpen = false;
+        let selectedPaymentMethod = '';
+        let selectedMomoProvider = '';
+
+        function toggleCart() {
+            const drawer = document.getElementById('cart-drawer');
+            const cartOverlay = document.getElementById('cart-overlay');
+            
+            isCartOpen = !isCartOpen;
+            
+            if (isCartOpen) {
+                drawer.classList.remove('translate-x-full');
+                cartOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                drawer.classList.add('translate-x-full');
+                cartOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function addToCart(name, price) {
+            const existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.qty++;
+            } else {
+                cart.push({ name, price, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function updateQty(index, change) {
+            cart[index].qty += change;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        function renderCart() {
+            const cartContainer = document.getElementById('cart-items');
+            const emptyState = document.getElementById('empty-cart');
+            const badgeHeader = document.getElementById('cart-badge-header');
+            const badgeFloat = document.getElementById('cart-badge-float');
+            
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            if (totalItems > 0) {
+                badgeHeader.innerText = totalItems;
+                badgeHeader.classList.remove('hidden');
+                badgeFloat.innerText = totalItems;
+                badgeFloat.classList.remove('hidden');
+            } else {
+                badgeHeader.classList.add('hidden');
+                badgeFloat.classList.add('hidden');
+            }
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '';
+                cartContainer.appendChild(emptyState);
+                emptyState.style.display = 'flex';
+                updateTotals();
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            cartContainer.innerHTML = '';
+
+            cart.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm';
+                itemEl.innerHTML = `
+                    <div class="w-10 h-10 rounded bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-semibold text-gray-800">${item.name}</h4>
+                        <p class="text-xs text-gray-500">GH₵ ${item.price.toLocaleString()}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateQty(${index}, -1)" class="w-6 h-6 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center justify-center text-xs">-</button>
+                        <span class="text-sm font-medium w-4 text-center">${item.qty}</span>
+                        <button onclick="updateQty(${index}, 1)" class="w-6 h-6 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center justify-center text-xs">+</button>
+                    </div>
+                `;
+                cartContainer.appendChild(itemEl);
+            });
+
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let tax = subtotal * 0.05;
+            let discount = parseFloat(document.getElementById('discount-input').value) || 0;
+            grandTotal = subtotal + tax - discount;
+
+            if (grandTotal < 0) grandTotal = 0;
+
+            document.getElementById('subtotal').innerText = `GH₵ ${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('tax').innerText = `GH₵ ${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('grand-total').innerText = `GH₵ ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('modal-total').innerText = `GH₵ ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        }
+
+        function calculateTotal() {
+            updateTotals();
+        }
+
+        // --- Payment Modal Logic ---
+        function openPaymentModal() {
+            if (cart.length === 0) {
+                alert("Cart is empty!");
+                return;
+            }
+            updateTotals();
+            document.getElementById('paymentModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            selectedPaymentMethod = '';
+            selectedMomoProvider = '';
+            document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.momo-provider').forEach(el => el.classList.remove('selected'));
+            document.getElementById('customer-phone').value = '';
+            document.getElementById('reference-number').value = '';
+            document.getElementById('cash-received').value = '';
+            document.getElementById('bank-select').value = '';
+            document.getElementById('bank-account-number').value = '';
+            document.getElementById('account-holder-name').value = '';
+            document.getElementById('change-display').classList.add('hidden');
+            hideAllPaymentFields();
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function hideAllPaymentFields() {
+            document.getElementById('momo-provider-container').classList.add('hidden');
+            document.getElementById('phone-field-container').classList.add('hidden');
+            document.getElementById('bank-field-container').classList.add('hidden');
+            document.getElementById('cash-field-container').classList.add('hidden');
+            document.getElementById('payment-notice').classList.add('hidden');
+        }
+
+        function selectPayment(element, method) {
+            document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedPaymentMethod = method;
+
+            const momoProviderContainer = document.getElementById('momo-provider-container');
+            const phoneField = document.getElementById('phone-field-container');
+            const bankField = document.getElementById('bank-field-container');
+            const cashField = document.getElementById('cash-field-container');
+            const paymentNotice = document.getElementById('payment-notice');
+            const noticeText = document.getElementById('payment-notice-text');
+
+            hideAllPaymentFields();
+
+            if (method === 'cash') {
+                cashField.classList.remove('hidden');
+                noticeText.textContent = 'Enter the cash amount received from customer';
+                paymentNotice.classList.remove('hidden');
+            } else if (method === 'momo') {
+                momoProviderContainer.classList.remove('hidden');
+                phoneField.classList.remove('hidden');
+                noticeText.textContent = 'Select mobile money provider and enter customer phone number';
+                paymentNotice.classList.remove('hidden');
+            } else if (method === 'bank') {
+                bankField.classList.remove('hidden');
+                noticeText.textContent = 'Bank selection and account number are required for bank transfer';
+                paymentNotice.classList.remove('hidden');
+            } else if (method === 'card') {
+                noticeText.textContent = 'Card payment - Reference number is optional';
+                paymentNotice.classList.remove('hidden');
+            }
+        }
+
+        function selectMomoProvider(element, provider) {
+            document.querySelectorAll('.momo-provider').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedMomoProvider = provider;
+        }
+
+        function calculateChange() {
+            const cashReceived = parseFloat(document.getElementById('cash-received').value) || 0;
+            const changeDisplay = document.getElementById('change-display');
+            const changeAmount = document.getElementById('change-amount');
+            
+            const change = cashReceived - grandTotal;
+            
+            if (cashReceived > 0) {
+                changeDisplay.classList.remove('hidden');
+                if (change >= 0) {
+                    changeAmount.textContent = `GH₵ ${change.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                    changeAmount.classList.remove('text-danger');
+                    changeAmount.classList.add('text-emerald-600');
+                } else {
+                    changeAmount.textContent = `GH₵ ${Math.abs(change).toLocaleString(undefined, {minimumFractionDigits: 2})} (Insufficient)`;
+                    changeAmount.classList.remove('text-emerald-600');
+                    changeAmount.classList.add('text-danger');
+                }
+            } else {
+                changeDisplay.classList.add('hidden');
+            }
+        }
+
+        // --- Receipt Generation Logic ---
+        let receiptNumber = '';
+
+        function generateReceiptNumber() {
+            const date = new Date();
+            const year = date.getFullYear().toString().substr(-2);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `RCP-${year}${month}${day}-${random}`;
+        }
+
+        function getMomoProviderName(provider) {
+            const providers = {
+                'mtn': 'MTN MoMo',
+                'vodafone': 'Vodafone Cash',
+                'airtel': 'AirtelTigo Money'
+            };
+            return providers[provider] || 'Mobile Money';
+        }
+
+        function getBankName(bankCode) {
+            const banks = {
+                'gba': 'GCB Bank',
+                'ecobank': 'Ecobank Ghana',
+                'stanbic': 'Stanbic Bank',
+                'barclays': 'Absa Bank',
+                'fidelity': 'Fidelity Bank',
+                'zenith': 'Zenith Bank',
+                'access': 'Access Bank',
+                'cal': 'CalBank',
+                'umb': 'UMB Bank',
+                'other': 'Other Bank'
+            };
+            return banks[bankCode] || 'Bank Transfer';
+        }
+
+        function generateReceipt() {
+            receiptNumber = generateReceiptNumber();
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-GB');
+            const timeStr = now.toLocaleTimeString('en-GB');
+            
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            let tax = subtotal * 0.05;
+            let discount = parseFloat(document.getElementById('discount-input').value) || 0;
+            let total = subtotal + tax - discount;
+            if (total < 0) total = 0;
+
+            document.getElementById('receipt-number').textContent = receiptNumber;
+            document.getElementById('receipt-date').textContent = dateStr;
+            document.getElementById('receipt-time').textContent = timeStr;
+            document.getElementById('receipt-cashier').textContent = 'John Doe';
+            
+            const paymentMethods = {
+                'cash': 'Cash',
+                'momo': 'Mobile Money',
+                'bank': 'Bank Transfer',
+                'card': 'Card Payment',
+                '': 'Cash'
+            };
+            document.getElementById('receipt-payment').textContent = paymentMethods[selectedPaymentMethod] || 'Cash';
+
+            const momoProviderRow = document.getElementById('receipt-momo-provider-row');
+            if (selectedPaymentMethod === 'momo' && selectedMomoProvider) {
+                momoProviderRow.style.display = 'flex';
+                document.getElementById('receipt-momo-provider').textContent = getMomoProviderName(selectedMomoProvider);
+            } else {
+                momoProviderRow.style.display = 'none';
+            }
+
+            const bankRow = document.getElementById('receipt-bank-row');
+            const accountRow = document.getElementById('receipt-account-row');
+            if (selectedPaymentMethod === 'bank') {
+                const bankCode = document.getElementById('bank-select').value;
+                const accountNumber = document.getElementById('bank-account-number').value;
+                if (bankCode) {
+                    bankRow.style.display = 'flex';
+                    document.getElementById('receipt-bank').textContent = getBankName(bankCode);
+                } else {
+                    bankRow.style.display = 'none';
+                }
+                if (accountNumber) {
+                    accountRow.style.display = 'flex';
+                    document.getElementById('receipt-account').textContent = accountNumber;
+                } else {
+                    accountRow.style.display = 'none';
+                }
+            } else {
+                bankRow.style.display = 'none';
+                accountRow.style.display = 'none';
+            }
+
+            const phone = document.getElementById('customer-phone').value;
+            const phoneRow = document.getElementById('receipt-phone-row');
+            if (phone && selectedPaymentMethod === 'momo') {
+                phoneRow.style.display = 'flex';
+                document.getElementById('receipt-phone').textContent = phone;
+            } else {
+                phoneRow.style.display = 'none';
+            }
+
+            const changeRow = document.getElementById('receipt-change-row');
+            if (selectedPaymentMethod === 'cash') {
+                const cashReceived = parseFloat(document.getElementById('cash-received').value) || 0;
+                const change = cashReceived - total;
+                if (cashReceived > 0 && change >= 0) {
+                    changeRow.style.display = 'flex';
+                    document.getElementById('receipt-change').textContent = `GH₵ ${change.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                } else {
+                    changeRow.style.display = 'none';
+                }
+            } else {
+                changeRow.style.display = 'none';
+            }
+
+            const itemsContainer = document.getElementById('receipt-items-container');
+            itemsContainer.innerHTML = '';
+            cart.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                const itemEl = document.createElement('div');
+                itemEl.className = 'receipt-item';
+                itemEl.style.margin = '8px 0';
+                itemEl.innerHTML = `
+                    <div class="receipt-item-name" style="word-wrap: break-word;">${item.name}</div>
+                    <div class="receipt-item-qty">${item.qty}x</div>
+                    <div class="receipt-item-price">${item.price.toLocaleString()}</div>
+                    <div class="receipt-item-price" style="font-weight: bold;">${itemTotal.toLocaleString()}</div>
+                `;
+                itemsContainer.appendChild(itemEl);
+            });
+
+            document.getElementById('receipt-subtotal').textContent = `GH₵ ${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('receipt-tax').textContent = `GH₵ ${tax.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('receipt-grand-total').textContent = `GH₵ ${total.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+            const discountRow = document.getElementById('receipt-discount-row');
+            if (discount > 0) {
+                discountRow.style.display = 'flex';
+                document.getElementById('receipt-discount').textContent = `-GH₵ ${discount.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            } else {
+                discountRow.style.display = 'none';
+            }
+
+            document.getElementById('receipt-barcode-number').textContent = receiptNumber.replace(/-/g, '');
+            document.getElementById('receipt-preview-content').innerHTML = document.getElementById('receipt-print').innerHTML;
+        }
+
+        function openReceiptPreview() {
+            generateReceipt();
+            document.getElementById('receiptPreviewModal').classList.remove('hidden');
+        }
+
+        function closeReceiptPreview() {
+            document.getElementById('receiptPreviewModal').classList.add('hidden');
+        }
+
+        function printReceipt() {
+            window.print();
+            setTimeout(() => {
+                closeReceiptPreview();
+            }, 1000);
+        }
+
+        function processPayment() {
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            if (selectedPaymentMethod === 'momo') {
+                if (!selectedMomoProvider) {
+                    alert('Please select a mobile money provider (MTN, Vodafone, or AirtelTigo)');
+                    return;
+                }
+                const phone = document.getElementById('customer-phone').value;
+                if (!phone || phone.length < 10) {
+                    alert('Please enter a valid customer phone number for Mobile Money payment');
+                    return;
+                }
+            }
+
+            if (selectedPaymentMethod === 'bank') {
+                const bankCode = document.getElementById('bank-select').value;
+                const accountNumber = document.getElementById('bank-account-number').value;
+                if (!bankCode) {
+                    alert('Please select a bank for bank transfer payment');
+                    return;
+                }
+                if (!accountNumber || accountNumber.length < 5) {
+                    alert('Please enter a valid bank account number');
+                    return;
+                }
+            }
+
+            if (selectedPaymentMethod === 'cash') {
+                const cashReceived = parseFloat(document.getElementById('cash-received').value) || 0;
+                if (cashReceived < grandTotal) {
+                    alert('Insufficient cash received. Please enter the correct amount.');
+                    return;
+                }
+            }
+
+            const btn = document.querySelector('#paymentModal button.bg-primary');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const shouldPrint = document.getElementById('print-receipt').checked;
+                
+                if (shouldPrint) {
+                    generateReceipt();
+                    openReceiptPreview();
+                    setTimeout(() => {
+                        printReceipt();
+                    }, 500);
+                }
+
+                closePaymentModal();
+                toggleCart();
+                clearCart();
+                showToast();
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        function showToast() {
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePaymentModal();
+                closeReceiptPreview();
+                if (isCartOpen) toggleCart();
+            }
+        });
+    </script>
+</body>
+</html>

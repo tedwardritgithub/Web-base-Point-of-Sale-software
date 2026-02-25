@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Reports | Prime Accessories</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/all.min.css">
+    <script src="css/tailwind.css"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        background: '#F3F4F6',
+                        surface: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .sidebar { transition: transform 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-background text-gray-800 font-sans antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-50 w-64 bg-surface shadow-lg transform -translate-x-full md:relative md:translate-x-0 flex flex-col">
+            <div class="h-16 flex items-center justify-center border-b border-gray-100">
+                <div class="flex items-center gap-2 text-primary font-bold text-xl">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span>Prime Accessories</span>
+                </div>
+            </div>
+
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-house w-5"></i> Dashboard
+                </a>
+                <a href="pos.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-cart-shopping w-5"></i> POS
+                </a>
+                <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-boxes-stacked w-5"></i> Inventory
+                </a>
+                <a href="sales.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-chart-line w-5"></i> Sales
+                </a>
+                <a href="reports.html" class="flex items-center gap-3 px-4 py-3 bg-indigo-50 text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-file-invoice w-5"></i> Reports
+                </a>
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-gear w-5"></i> System Settings
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-primary font-bold">JD</div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">John Doe</p>
+                        <p class="text-xs text-gray-500">Admin</p>
+                    </div>
+                    <button class="ml-auto text-gray-400 hover:text-danger">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            
+            <!-- Top Header -->
+            <header class="h-16 bg-surface shadow-sm flex items-center justify-between px-6 z-40">
+                <div class="flex items-center gap-4">
+                    <button id="menu-toggle" class="md:hidden text-gray-500 hover:text-primary focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl font-bold text-gray-800">Reports & Analytics</h1>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                        <i class="fa-solid fa-download mr-2"></i>Export Report
+                    </button>
+                </div>
+            </header>
+
+            <!-- Reports Content -->
+            <main class="flex-1 overflow-y-auto bg-background p-6">
+                
+                <!-- Report Type Tabs -->
+                <div class="bg-surface rounded-xl shadow-sm border border-gray-100 mb-6">
+                    <div class="border-b border-gray-100">
+                        <nav class="flex gap-6 px-6" aria-label="Tabs">
+                            <button class="border-b-2 border-primary py-4 px-1 text-sm font-medium text-primary">
+                                Sales Report
+                            </button>
+                            <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                Inventory Report
+                            </button>
+                            <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                Cashier Report
+                            </button>
+                            <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                Product Report
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Report Filters -->
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                                <input type="date" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                                <input type="date" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary bg-surface">
+                                    <option>All Categories</option>
+                                    <option>Smartphones</option>
+                                    <option>Accessories</option>
+                                    <option>Tablets</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button class="w-full px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+                                    <i class="fa-solid fa-filter mr-2"></i>Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-surface rounded-xl shadow-sm p-6 border border-gray-100">
+                        <p class="text-sm text-gray-500 font-medium mb-1">Total Revenue</p>
+                        <h3 class="text-2xl font-bold text-gray-800">GH₵ 45,250.00</h3>
+                        <p class="text-xs text-secondary mt-2"><i class="fa-solid fa-arrow-up"></i> 18% vs last month</p>
+                    </div>
+                    <div class="bg-surface rounded-xl shadow-sm p-6 border border-gray-100">
+                        <p class="text-sm text-gray-500 font-medium mb-1">Total Orders</p>
+                        <h3 class="text-2xl font-bold text-gray-800">342</h3>
+                        <p class="text-xs text-secondary mt-2"><i class="fa-solid fa-arrow-up"></i> 12% vs last month</p>
+                    </div>
+                    <div class="bg-surface rounded-xl shadow-sm p-6 border border-gray-100">
+                        <p class="text-sm text-gray-500 font-medium mb-1">Avg Order Value</p>
+                        <h3 class="text-2xl font-bold text-gray-800">GH₵ 132.31</h3>
+                        <p class="text-xs text-warning mt-2"><i class="fa-solid fa-arrow-down"></i> 3% vs last month</p>
+                    </div>
+                    <div class="bg-surface rounded-xl shadow-sm p-6 border border-gray-100">
+                        <p class="text-sm text-gray-500 font-medium mb-1">Total Profit</p>
+                        <h3 class="text-2xl font-bold text-gray-800">GH₵ 12,580.00</h3>
+                        <p class="text-xs text-secondary mt-2"><i class="fa-solid fa-arrow-up"></i> 22% vs last month</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Sales Trend Chart -->
+                    <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Sales Trend</h3>
+                        <div class="h-64">
+                            <canvas id="salesTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Chart -->
+                    <div class="bg-surface rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Payment Methods</h3>
+                        <div class="h-64">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="bg-surface rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-bold text-gray-800">Top Selling Products</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50">
+                                <tr class="text-gray-500 text-xs uppercase">
+                                    <th class="px-6 py-3 font-semibold">Product</th>
+                                    <th class="px-6 py-3 font-semibold">Category</th>
+                                    <th class="px-6 py-3 font-semibold text-center">Units Sold</th>
+                                    <th class="px-6 py-3 font-semibold text-right">Revenue</th>
+                                    <th class="px-6 py-3 font-semibold text-right">Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-gray-800">iPhone 15 Pro</td>
+                                    <td class="px-6 py-4 text-gray-600">Smartphones</td>
+                                    <td class="px-6 py-4 text-center text-gray-600">45</td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-800">GH₵ 562,500</td>
+                                    <td class="px-6 py-4 text-right text-secondary font-medium">GH₵ 125,000</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-gray-800">Samsung S24</td>
+                                    <td class="px-6 py-4 text-gray-600">Smartphones</td>
+                                    <td class="px-6 py-4 text-center text-gray-600">38</td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-800">GH₵ 387,600</td>
+                                    <td class="px-6 py-4 text-right text-secondary font-medium">GH₵ 85,000</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-gray-800">iPad Air 5</td>
+                                    <td class="px-6 py-4 text-gray-600">Tablets</td>
+                                    <td class="px-6 py-4 text-center text-gray-600">28</td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-800">GH₵ 182,000</td>
+                                    <td class="px-6 py-4 text-right text-secondary font-medium">GH₵ 42,000</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-gray-800">AirPods Pro 2</td>
+                                    <td class="px-6 py-4 text-gray-600">Accessories</td>
+                                    <td class="px-6 py-4 text-center text-gray-600">52</td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-800">GH₵ 145,600</td>
+                                    <td class="px-6 py-4 text-right text-secondary font-medium">GH₵ 35,000</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-gray-800">Xiaomi Redmi 13</td>
+                                    <td class="px-6 py-4 text-gray-600">Smartphones</td>
+                                    <td class="px-6 py-4 text-center text-gray-600">65</td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-800">GH₵ 208,000</td>
+                                    <td class="px-6 py-4 text-right text-secondary font-medium">GH₵ 48,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="mt-8 text-center text-xs text-gray-400">
+                    &copy; 2026 Prime Accessories POS System. All rights reserved.
+                </footer>
+
+            </main>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    </div>
+
+    <script>
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        function toggleSidebar() {
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Sales Trend Chart
+        const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+             {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Sales (GH₵)',
+                     [5200, 6800, 4900, 7500, 6200, 8900, 5750],
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#F3F4F6' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Payment Methods Chart
+        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+        new Chart(paymentCtx, {
+            type: 'doughnut',
+             {
+                labels: ['Cash', 'Mobile Money', 'Bank Transfer', 'Card'],
+                datasets: [{
+                     [45, 35, 15, 5],
+                    backgroundColor: ['#10B981', '#F59E0B', '#1E40AF', '#6B7280'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
